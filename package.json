@@ -1,0 +1,24 @@
+{
+  "name": "web-sql-batch-helper",
+  "version": "0.1.0-pre1",
+  "description": "Web SQL transaction helper if not all SQL is available in the same tick",
+  "jsnext:main": "dist/index.js",
+  "scripts": {
+    "build": "./node_modules/.bin/coffee -c index.coffee",
+    "prepublish": "rm -rf dist && mkdir dist && coffee -p index.coffee > dist/index.js",
+    "start": "./node_modules/.bin/rollup testIndex.js -o testBundle.js -f cjs",
+    "start2": "./node_modules/.bin/rollup cordovaTestIndex.js -o cordovaTestApp/www/testBundle.js -f cjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "web",
+    "sql",
+    "batch"
+  ],
+  "author": "Christopher J. Brody",
+  "license": "ISC OR MIT",
+  "devDependencies": {
+    "coffee-script": "^1.11.1",
+    "rollup": "^0.36.3"
+  }
+}
