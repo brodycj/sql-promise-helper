@@ -1,17 +1,17 @@
 {
   "name": "web-sql-batch-helper",
-  "version": "0.1.0-pre7a",
+  "version": "0.1.0-pre7b",
   "description": "Web SQL transaction helper if not all SQL is available in the same tick",
   "main": "dist/index.cjs.js",
   "jsnext:main": "dist/index.es6.js",
   "scripts": {
-    "build": "npm run makedist",
+    "build": "npm run distbuild",
+    "distbuild": "rm -rf dist && mkdir dist && coffee -p src/index.coffee > dist/index.es6.js && rollup dist/index.es6.js -o dist/index.cjs.js -f cjs",
     "distclean": "rm -rf dist cordovaTestApp/www/js/index.js cordovaTestApp/platforms cordovaTestApp/plugins webTest/js/index.js test.db node_modules",
-    "makedist": "rm -rf dist && mkdir dist && coffee -p src/index.coffee > dist/index.es6.js && rollup dist/index.es6.js -o dist/index.cjs.js -f cjs",
-    "prepublish": "npm run makedist",
-    "start": "npm run makedist && rollup webTest/src/index.js -o webTest/js/index.js -f cjs",
-    "start2": "npm run makedist && rollup cordovaTestApp/src/index.js -o cordovaTestApp/www/js/index.js -f cjs",
-    "test": "mocha --recursive"
+    "prepublish": "npm run distbuild",
+    "start": "npm run distbuild && rollup webTest/src/index.js -o webTest/js/index.js -f cjs",
+    "start2": "npm run distbuild && rollup cordovaTestApp/src/index.js -o cordovaTestApp/www/js/index.js -f cjs",
+    "test": "npm run distbuild && mocha --recursive"
   },
   "keywords": [
     "web",
