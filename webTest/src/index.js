@@ -1,4 +1,4 @@
-import {batchHelper} from './index.js';
+import {batchHelper} from '../../dist/index.es6.js';
 
 let db = window.openDatabase('test.db', '1.0', 'Test', 5*1024*1024);
 

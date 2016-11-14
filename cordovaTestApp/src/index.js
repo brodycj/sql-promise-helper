@@ -1,4 +1,4 @@
-import {batchHelper} from './index.js';
+import {batchHelper} from '../../dist/index.es6.js';
 
 document.addEventListener('deviceready', doTest);
 

@@ -1,14 +1,16 @@
 {
   "name": "web-sql-batch-helper",
-  "version": "0.1.0-pre4",
+  "version": "0.1.0-pre5",
   "description": "Web SQL transaction helper if not all SQL is available in the same tick",
   "main": "dist/index.cjs.js",
   "jsnext:main": "dist/index.es6.js",
   "scripts": {
-    "build": "coffee -c index.coffee",
-    "prepublish": "rm -rf dist && mkdir dist && coffee -p index.coffee > dist/index.es6.js && rollup dist/index.es6.js -o dist/index.cjs.js -f cjs",
-    "start": "rollup testIndex.js -o testBundle.js -f cjs",
-    "start2": "rollup cordovaTestIndex.js -o cordovaTestApp/www/testBundle.js -f cjs",
+    "build": "npm run makeist",
+    "cleanup": "rm -rf dist cordovaTestApp/www/js/index.js cordovaTestApp/platforms cordovaTestApp/plugins webTest/js/index.js test.db",
+    "makedist": "rm -rf dist && mkdir dist && coffee -p index.coffee > dist/index.es6.js && rollup dist/index.es6.js -o dist/index.cjs.js -f cjs",
+    "prepublish": "npm run makedist",
+    "start": "npm run makedist && rollup webTest/src/index.js -o webTest/js/index.js -f cjs",
+    "start2": "npm run makedist && rollup cordovaTestApp/src/index.js -o cordovaTestApp/www/js/index.js -f cjs",
     "test": "mocha --recursive"
   },
   "keywords": [
