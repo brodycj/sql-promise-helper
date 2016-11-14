@@ -1,12 +1,12 @@
 {
   "name": "web-sql-batch-helper",
-  "version": "0.1.0-pre7b",
+  "version": "0.1.0-pre8a",
   "description": "Web SQL transaction helper if not all SQL is available in the same tick",
   "main": "dist/index.cjs.js",
   "jsnext:main": "dist/index.es6.js",
   "scripts": {
     "build": "npm run distbuild",
-    "distbuild": "rm -rf dist && mkdir dist && coffee -p src/index.coffee > dist/index.es6.js && rollup dist/index.es6.js -o dist/index.cjs.js -f cjs",
+    "distbuild": "rm -rf dist && mkdir dist && coffee -p src/index.coffee > dist/index.es6.js && babel dist/index.es6.js > dist/index.cjs.js",
     "distclean": "rm -rf dist cordovaTestApp/www/js/index.js cordovaTestApp/platforms cordovaTestApp/plugins webTest/js/index.js test.db node_modules",
     "prepublish": "npm run distbuild",
     "start": "npm run distbuild && rollup webTest/src/index.js -o webTest/js/index.js -f cjs",
@@ -21,6 +21,10 @@
   "author": "Christopher J. Brody",
   "license": "ISC OR MIT OR Apache-2.0",
   "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-core": "^6.18.2",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.18.0",
+    "babel-preset-es2015": "^6.18.0",
     "coffee-script": "^1.11.1",
     "expect.js": "^0.3.1",
     "mocha": "^3.1.2",
