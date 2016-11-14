@@ -1,6 +1,6 @@
 {
   "name": "web-sql-batch-helper",
-  "version": "0.1.0-pre8a",
+  "version": "0.1.0-pre8b",
   "description": "Web SQL transaction helper if not all SQL is available in the same tick",
   "main": "dist/index.cjs.js",
   "jsnext:main": "dist/index.es6.js",
