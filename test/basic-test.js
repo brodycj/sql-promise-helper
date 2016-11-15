@@ -16,7 +16,7 @@ describe('Basic', function() {
     }
 
     describe(implLabels[i], function() {
-      it('Batch helper success (TBD test timing)', function(done) {
+      it('Batch helper success (callback NOT in the same tick)', function(done) {
         const db = openDatabase('test.db', '1.0', 'Test', 1);
 
         const helper = batchHelper(db, onsuccess, function(error) {
@@ -24,12 +24,20 @@ describe('Basic', function() {
           done();
         });
 
+        var check1 = false, check2 = false;
+
         helper.executeStatement('DROP TABLE IF EXISTS tt');
         helper.executeStatement('CREATE TABLE tt(a,b)');
         helper.executeStatement('INSERT INTO tt VALUES(?,?)', [101, 'Alice']);
         helper.commit();
 
+        expect(check2).not.to.be.ok();
+        check1 = true;
+
         function onsuccess() {
+          expect(check1).to.be.ok();
+          check2 = true;
+
           db.readTransaction(function(tx) {
             tx.executeSql('SELECT * FROM tt', null, function(ignored, rs) {
               expect(rs).to.be.ok();
@@ -48,7 +56,7 @@ describe('Basic', function() {
         }
       });
 
-      it('Batch helper error (TBD test timing)', function(done) {
+      it('Batch helper error (callback NOT in the same tick)', function(done) {
         const db = openDatabase('test.db', '1.0', 'Test', 1);
 
         // Pre-cleanup in separate transaction:
@@ -64,15 +72,22 @@ describe('Basic', function() {
           done();
         }, onerror);
 
+        var check1 = false, check2 = false;
+
         helper.executeStatement('CREATE TABLE tt(a,b)');
         // syntax error:
         helper.executeStatement('INSRT INTO tt (?,?) VALUES', [101, 'Alice']);
         helper.commit();
 
+        expect(check2).not.to.be.ok();
+        check1 = true;
+
         // EXPECTED RESULT:
         function onerror(error) {
+          expect(check1).to.be.ok();
           expect(error).to.be.ok();
           expect(error.message).to.be.ok();
+          check2 = true;
 
           db.readTransaction(function(tx) {
             tx.executeSql('SELECT * FROM tt', null, function(ignored, rs) {
@@ -89,7 +104,7 @@ describe('Basic', function() {
         }
       });
 
-      it('Batch helper abort (TBD test timing)', function(done) {
+      it('Batch helper abort (error callback CURRENTLY in the same tick, TODO should be in the next tick)', function(done) {
         const db = openDatabase('test.db', '1.0', 'Test', 1);
 
         // Pre-cleanup in separate transaction:
@@ -105,14 +120,26 @@ describe('Basic', function() {
           done();
         }, onerror);
 
+        var check1 = false;
+        var check2 = false;
+
         helper.executeStatement('CREATE TABLE tt(a,b)');
         helper.executeStatement('INSERT INTO tt VALUES(?,?)', [101, 'Alice']);
         helper.abort();
+
+        // CURRENT BEHAVIOR: onerror callback is immediately triggered.
+        // FUTURE TODO: onerror callback should be called in the next tick.
+
+        expect(check2).to.be.ok();
+        check1 = true;
 
         // EXPECTED RESULT:
         function onerror(error) {
           expect(error).to.be.ok();
           expect(error.message).to.be('Aborted');
+          // CURRENT BEHAVIOR:
+          expect(check1).not.to.be.ok();
+          check2 = true;
 
           db.readTransaction(function(tx) {
             tx.executeSql('SELECT * FROM tt', null, function(ignored, rs) {
@@ -124,6 +151,7 @@ describe('Basic', function() {
             // EXPECTED RESULT:
             expect(error).to.be.ok();
             expect(error.message).to.be.ok();
+            expect(check1).to.be.ok();
             done();
           });
         }

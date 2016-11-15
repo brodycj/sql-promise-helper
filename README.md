@@ -87,7 +87,10 @@ Then assemble the bundle using a tool such as RollupJS or JSPM.
 - Just use `var` instead.
 - Use a tool like BabelJS (commonly used with JSPM, RollupJS, WebPack, etc.)
 
+## Known issues
+
+- abort triggers the error callback in the same tick while commit triggers the success or error callback in another tick
+
 ## Test TODOs
 
-- Timing (callbacks should NOT be received in the same tick in case of abort or commit)
 - attempt to call executeStatement/abort/commit after abort or commit (should throw)
