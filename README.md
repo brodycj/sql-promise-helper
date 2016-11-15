@@ -90,7 +90,4 @@ Then assemble the bundle using a tool such as RollupJS or JSPM.
 ## Known issues
 
 - abort triggers the error callback in the same tick while commit triggers the success or error callback in another tick
-
-## Test TODOs
-
-- attempt to call executeStatement/abort/commit after abort or commit (should throw)
+- attempts to execute calls after commit (should throw instead)

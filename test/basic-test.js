@@ -157,6 +157,95 @@ describe('Basic', function() {
         }
       });
 
+      it('executeStatement/abort/commit after abort should throw', function(done) {
+        const db = openDatabase('test.db', '1.0', 'Test', 1);
+
+        const helper = batchHelper(db, function() {
+          expect().fail('Unexpected batch success');
+          done();
+        }, onerror);
+
+        var check1 = false;
+
+        helper.executeStatement('DROP TABLE IF EXISTS tt');
+        helper.executeStatement('CREATE TABLE tt(a,b)');
+        helper.abort();
+
+        // CURRENT BEHAVIOR: onerror callback is triggered before the following try-catch block.
+        // FUTURE TODO: onerror callback should be called in the next tick.
+
+        expect(check1).to.be.ok();
+
+        try {
+          helper.executeStatement('SELECT 1');
+          // should not get here:
+          expect().fail('executeStatement after abort did not throw');
+        } catch(ex) {
+          expect(ex).to.be.ok();
+          expect(ex.message).to.be('Invalid state');
+        }
+
+        try {
+          helper.abort();
+          // should not get here:
+          expect().fail('abort after abort did not throw');
+        } catch(ex) {
+          expect(ex).to.be.ok();
+          expect(ex.message).to.be('Invalid state');
+        }
+
+        try {
+          helper.commit();
+          // should not get here:
+          expect().fail('commit after abort did not throw');
+        } catch(ex) {
+          expect(ex).to.be.ok();
+          expect(ex.message).to.be('Invalid state');
+        }
+
+        done();
+
+        function onerror(error) {
+          expect(error).to.be.ok();
+          expect(error.message).to.be('Aborted');
+          expect(check1).not.to.be.ok();
+          check1 = true;
+        }
+      });
+
+      it('executeStatement/TBD ??? after commit - BROKEN (TODO should throw)', function(done) {
+        const db = openDatabase('test.db', '1.0', 'Test', 1);
+
+        const helper = batchHelper(db, onsuccess, function(error) {
+          expect().fail('Unexpected batch failure with error message: ' + error.message);
+          done();
+        });
+
+        var check1 = false;
+
+        helper.executeStatement('DROP TABLE IF EXISTS tt');
+        helper.executeStatement('CREATE TABLE tt(a,b)');
+        helper.commit();
+
+        try {
+          helper.executeStatement('SELECT 1');
+          // TODO should not get here.
+        } catch(ex) {
+          expect(ex).to.be.ok();
+          expect(ex.message).to.be('Invalid state');
+          expect().fail('BEHAVIOR CHANGED (FIXED) PLEASE UPDATE THIS TEST');
+        }
+
+        // FUTURE TBD test commit/abort after commit
+
+        check1 = true;
+
+        function onsuccess() {
+          expect(check1).to.be.ok();
+          done();
+        }
+      });
+
     });
   }
 });
