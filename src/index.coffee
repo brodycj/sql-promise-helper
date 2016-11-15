@@ -1,4 +1,14 @@
-executeBatch = (db, statements, onsuccess, onerror) ->
+executeStatement = (db, sql, values, onsuccess, onerror) ->
+  if !!db.executeSql
+    db.executeSql(sql, values || [], onsuccess, onerror)
+  else
+    db.transaction (tx) ->
+      tx.executeSql sql, values, (ignored, rs) ->
+        onsuccess rs
+      , (ignored, error) ->
+        onerror error
+
+executeStatementBatch = (db, statements, onsuccess, onerror) ->
   if !!db.sqlBatch
     db.sqlBatch statements, onsuccess, onerror
   else
@@ -43,12 +53,16 @@ newBatchTransaction = (db) ->
 
       # return promise object:
       new Promise (resolve, reject) ->
-        executeBatch db, mystatements, resolve, reject
+        executeStatementBatch db, mystatements, resolve, reject
         return
   }
 
-export newBatchHelper = (db) ->
-  # Batch helper object:
+export newPromiseHelper = (db) ->
+  # Promise helper object:
   {
+    executeStatement: (sql, values) ->
+      new Promise (resolve, reject) ->
+        executeStatement db, sql, values, resolve, reject
+
     newBatchTransaction: -> newBatchTransaction db
   }

@@ -1,7 +1,7 @@
 {
-  "name": "web-sql-batch-helper",
-  "version": "0.2.0-pre01",
-  "description": "Web SQL transaction helper if not all SQL is available in the same tick",
+  "name": "sql-promise-helper",
+  "version": "0.0.1-pre01",
+  "description": "Web SQL promise helper",
   "main": "dist/index.js",
   "jsnext:main": "dist/index.es6.js",
   "scripts": {

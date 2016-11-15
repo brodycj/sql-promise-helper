@@ -3,7 +3,7 @@ const expect = require('expect.js');
 const openDatabase = require('../node_modules/websql/lib/index.js');
 const cordovaTestwrapper = require('../test/cordova-test-wrapper.js');
 
-const newBatchHelper = require('../dist/index.js').newBatchHelper;
+const newPromiseHelper = require('../dist/index.js').newPromiseHelper;
 
 const implLabels = ['Web SQL API', 'Cordova plugin API'];
 
@@ -19,7 +19,7 @@ describe('Basic', function() {
       it('Batch helper tx success & check stored data', function(done) {
         const db = openDatabase('test.db', '1.0', 'Test', 1);
 
-        const helper = newBatchHelper(db);
+        const helper = newPromiseHelper(db);
 
         var check1 = false, check2 = false;
 
@@ -66,7 +66,7 @@ describe('Basic', function() {
           done();
         });
 
-        const helper = newBatchHelper(db);
+        const helper = newPromiseHelper(db);
 
         var check1 = false, check2 = false;
 
@@ -113,7 +113,7 @@ describe('Basic', function() {
           done();
         });
 
-        const helper = newBatchHelper(db);
+        const helper = newPromiseHelper(db);
 
         const tx = helper.newBatchTransaction();
         tx.executeStatement('CREATE TABLE tt(a,b)');
@@ -139,7 +139,7 @@ describe('Basic', function() {
       it('executeStatement/abort/commit after abort should throw', function(done) {
         const db = openDatabase('test.db', '1.0', 'Test', 1);
 
-        const helper = newBatchHelper(db);
+        const helper = newPromiseHelper(db);
 
         const tx = helper.newBatchTransaction();
         tx.executeStatement('DROP TABLE IF EXISTS tt');
@@ -179,7 +179,7 @@ describe('Basic', function() {
       it('executeStatement/commit/abort after commit should throw', function(done) {
         const db = openDatabase('test.db', '1.0', 'Test', 1);
 
-        const helper = newBatchHelper(db);
+        const helper = newPromiseHelper(db);
 
         var check1 = false;
 

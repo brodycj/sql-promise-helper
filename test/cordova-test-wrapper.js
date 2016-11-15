@@ -6,6 +6,13 @@ module.exports = function(db) {
     readTransaction: function(f, ok, error) {
       db.readTransaction(f, ok, error);
     },
+    executeSql: function(sql, params, ok, error) {
+      db.transaction(function(tx) {
+        tx.executeSql(sql, params, function(ignored, rs) {
+          ok(rs);
+        });
+      }, error);
+    },
     sqlBatch: function(batch, ok, error) {
       db.transaction(function(tx) {
         for (var i=0; i<batch.length; ++i) {
