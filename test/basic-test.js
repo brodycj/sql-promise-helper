@@ -3,7 +3,7 @@ const expect = require('expect.js');
 const openDatabase = require('../node_modules/websql/lib/index.js');
 const cordovaTestwrapper = require('../test/cordova-test-wrapper.js');
 
-const batchHelper = require('../dist/index.cjs.js').batchHelper;
+const newBatchHelper = require('../dist/index.js').newBatchHelper;
 
 const implLabels = ['Web SQL API', 'Cordova plugin API'];
 
@@ -16,25 +16,19 @@ describe('Basic', function() {
     }
 
     describe(implLabels[i], function() {
-      it('Batch helper success (callback NOT in the same tick)', function(done) {
+      it('Batch helper tx success & check stored data', function(done) {
         const db = openDatabase('test.db', '1.0', 'Test', 1);
 
-        const helper = batchHelper(db, onsuccess, function(error) {
-          expect().fail('Unexpected batch failure with error message: ' + error.message);
-          done();
-        });
+        const helper = newBatchHelper(db);
 
         var check1 = false, check2 = false;
 
-        helper.executeStatement('DROP TABLE IF EXISTS tt');
-        helper.executeStatement('CREATE TABLE tt(a,b)');
-        helper.executeStatement('INSERT INTO tt VALUES(?,?)', [101, 'Alice']);
-        helper.commit();
-
-        expect(check2).not.to.be.ok();
-        check1 = true;
-
-        function onsuccess() {
+        const tx = helper.newBatchTransaction();
+        tx.executeStatement('DROP TABLE IF EXISTS tt');
+        tx.executeStatement('CREATE TABLE tt(a,b)');
+        tx.executeStatement('INSERT INTO tt VALUES(?,?)', [101, 'Alice']);
+        tx.commit().then(() => {
+          // EXPECTED RESULT:
           expect(check1).to.be.ok();
           check2 = true;
 
@@ -53,10 +47,15 @@ describe('Basic', function() {
           }, function(error) {
             expect().fail('unexpected error with message: ' + error.message);
           });
-        }
+        }, (error) => {
+          expect().fail('unexpected error with message: ' + error.message);
+        });
+
+        expect(check2).not.to.be.ok();
+        check1 = true;
       });
 
-      it('Batch helper error (callback NOT in the same tick)', function(done) {
+      it('Batch helper tx error & check for rollback', function(done) {
         const db = openDatabase('test.db', '1.0', 'Test', 1);
 
         // Pre-cleanup in separate transaction:
@@ -67,23 +66,19 @@ describe('Basic', function() {
           done();
         });
 
-        const helper = batchHelper(db, function() {
-          expect().fail('Unexpected batch success');
-          done();
-        }, onerror);
+        const helper = newBatchHelper(db);
 
         var check1 = false, check2 = false;
 
-        helper.executeStatement('CREATE TABLE tt(a,b)');
+        const tx = helper.newBatchTransaction();
+        tx.executeStatement('CREATE TABLE tt(a,b)');
         // syntax error:
-        helper.executeStatement('INSRT INTO tt (?,?) VALUES', [101, 'Alice']);
-        helper.commit();
-
-        expect(check2).not.to.be.ok();
-        check1 = true;
-
-        // EXPECTED RESULT:
-        function onerror(error) {
+        tx.executeStatement('INSRT INTO tt (?,?) VALUES', [101, 'Alice']);
+        tx.commit().then(() => {
+          expect().fail('Unexpected batch tx success');
+          done();
+        }, (error) => {
+          // EXPECTED RESULT:
           expect(check1).to.be.ok();
           expect(error).to.be.ok();
           expect(error.message).to.be.ok();
@@ -101,10 +96,13 @@ describe('Basic', function() {
             expect(error.message).to.be.ok();
             done();
           });
-        }
+        });
+
+        expect(check2).not.to.be.ok();
+        check1 = true;
       });
 
-      it('Batch helper abort (error callback CURRENTLY in the same tick, TODO should be in the next tick)', function(done) {
+      it('Batch helper tx abort & check', function(done) {
         const db = openDatabase('test.db', '1.0', 'Test', 1);
 
         // Pre-cleanup in separate transaction:
@@ -115,32 +113,14 @@ describe('Basic', function() {
           done();
         });
 
-        const helper = batchHelper(db, function() {
-          expect().fail('Unexpected batch success');
-          done();
-        }, onerror);
+        const helper = newBatchHelper(db);
 
-        var check1 = false;
-        var check2 = false;
+        const tx = helper.newBatchTransaction();
+        tx.executeStatement('CREATE TABLE tt(a,b)');
+        tx.executeStatement('INSERT INTO tt VALUES(?,?)', [101, 'Alice']);
+        tx.abort();
 
-        helper.executeStatement('CREATE TABLE tt(a,b)');
-        helper.executeStatement('INSERT INTO tt VALUES(?,?)', [101, 'Alice']);
-        helper.abort();
-
-        // CURRENT BEHAVIOR: onerror callback is immediately triggered.
-        // FUTURE TODO: onerror callback should be called in the next tick.
-
-        expect(check2).to.be.ok();
-        check1 = true;
-
-        // EXPECTED RESULT:
-        function onerror(error) {
-          expect(error).to.be.ok();
-          expect(error.message).to.be('Aborted');
-          // CURRENT BEHAVIOR:
-          expect(check1).not.to.be.ok();
-          check2 = true;
-
+        {
           db.readTransaction(function(tx) {
             tx.executeSql('SELECT * FROM tt', null, function(ignored, rs) {
               // NOT EXPECTED:
@@ -151,7 +131,6 @@ describe('Basic', function() {
             // EXPECTED RESULT:
             expect(error).to.be.ok();
             expect(error.message).to.be.ok();
-            expect(check1).to.be.ok();
             done();
           });
         }
@@ -160,24 +139,15 @@ describe('Basic', function() {
       it('executeStatement/abort/commit after abort should throw', function(done) {
         const db = openDatabase('test.db', '1.0', 'Test', 1);
 
-        const helper = batchHelper(db, function() {
-          expect().fail('Unexpected batch success');
-          done();
-        }, onerror);
+        const helper = newBatchHelper(db);
 
-        var check1 = false;
-
-        helper.executeStatement('DROP TABLE IF EXISTS tt');
-        helper.executeStatement('CREATE TABLE tt(a,b)');
-        helper.abort();
-
-        // CURRENT BEHAVIOR: onerror callback is triggered before the following try-catch block.
-        // FUTURE TODO: onerror callback should be called in the next tick.
-
-        expect(check1).to.be.ok();
+        const tx = helper.newBatchTransaction();
+        tx.executeStatement('DROP TABLE IF EXISTS tt');
+        tx.executeStatement('CREATE TABLE tt(a,b)');
+        tx.abort();
 
         try {
-          helper.executeStatement('SELECT 1');
+          tx.executeStatement('SELECT 1');
           // should not get here:
           expect().fail('executeStatement after abort did not throw');
         } catch(ex) {
@@ -186,7 +156,7 @@ describe('Basic', function() {
         }
 
         try {
-          helper.abort();
+          tx.abort();
           // should not get here:
           expect().fail('abort after abort did not throw');
         } catch(ex) {
@@ -195,7 +165,7 @@ describe('Basic', function() {
         }
 
         try {
-          helper.commit();
+          tx.commit();
           // should not get here:
           expect().fail('commit after abort did not throw');
         } catch(ex) {
@@ -204,46 +174,51 @@ describe('Basic', function() {
         }
 
         done();
-
-        function onerror(error) {
-          expect(error).to.be.ok();
-          expect(error.message).to.be('Aborted');
-          expect(check1).not.to.be.ok();
-          check1 = true;
-        }
       });
 
-      it('executeStatement/TBD ??? after commit - BROKEN (TODO should throw)', function(done) {
+      it('executeStatement/commit/abort after commit should throw', function(done) {
         const db = openDatabase('test.db', '1.0', 'Test', 1);
 
-        const helper = batchHelper(db, onsuccess, function(error) {
-          expect().fail('Unexpected batch failure with error message: ' + error.message);
-          done();
-        });
+        const helper = newBatchHelper(db);
 
         var check1 = false;
 
-        helper.executeStatement('DROP TABLE IF EXISTS tt');
-        helper.executeStatement('CREATE TABLE tt(a,b)');
-        helper.commit();
+        const tx = helper.newBatchTransaction();
+        tx.executeStatement('DROP TABLE IF EXISTS tt');
+        tx.executeStatement('CREATE TABLE tt(a,b)');
+        tx.commit().then(() => {
+          expect(check1).to.be.ok();
+          done();
+        });
 
         try {
-          helper.executeStatement('SELECT 1');
-          // TODO should not get here.
+          tx.executeStatement('SELECT 1');
+          // should not get here:
+          expect().fail('executeStatement after abort did not throw');
         } catch(ex) {
           expect(ex).to.be.ok();
           expect(ex.message).to.be('Invalid state');
-          expect().fail('BEHAVIOR CHANGED (FIXED) PLEASE UPDATE THIS TEST');
         }
 
-        // FUTURE TBD test commit/abort after commit
+        try {
+          tx.commit();
+          // should not get here:
+          expect().fail('commit after abort did not throw');
+        } catch(ex) {
+          expect(ex).to.be.ok();
+          expect(ex.message).to.be('Invalid state');
+        }
+
+        try {
+          tx.abort();
+          // should not get here:
+          expect().fail('abort after abort did not throw');
+        } catch(ex) {
+          expect(ex).to.be.ok();
+          expect(ex.message).to.be('Invalid state');
+        }
 
         check1 = true;
-
-        function onsuccess() {
-          expect(check1).to.be.ok();
-          done();
-        }
       });
 
     });

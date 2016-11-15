@@ -1,20 +1,21 @@
-import {batchHelper} from '../../dist/index.es6.js';
+import {newBatchHelper} from '../../dist/index.es6.js';
 
-let db = window.openDatabase('test.db', '1.0', 'Test', 5*1024*1024);
+const db = window.openDatabase('test.db', '1.0', 'Test', 5*1024*1024);
 
-let helper = batchHelper(db, step2, function(e) { alert('BATCH ERROR: ' + message); });
+const helper = newBatchHelper(db);
 
-helper.executeStatement('DROP TABLE IF EXISTS tt');
-helper.executeStatement('CREATE TABLE tt(a,b)');
-helper.executeStatement('INSERT INTO tt VALUES(?,?)', [101, 'Alice']);
-helper.commit();
-
-function step2() {
-  db.transaction(function(tx) {
+const tx = helper.newBatchTransaction();
+tx.executeStatement('DROP TABLE IF EXISTS tt');
+tx.executeStatement('CREATE TABLE tt(a,b)');
+tx.executeStatement('INSERT INTO tt VALUES(?,?)', [101, 'Alice']);
+tx.commit().then(() => {
+  db.transaction((tx) => {
     tx.executeSql('SELECT * FROM tt', null, function(ignored, rs) {
       alert('GOT RESULT LENGTH: ' + rs.rows.length + ' FIRST: ' + JSON.stringify(rs.rows.item(0)));
     });
-  }, function(error) {
+  }, (error) => {
     alert('step 2 error: ' + error.message);
   });
-}
+}, (error) => {
+  alert('BATCH ERROR: ' + error.message);
+});

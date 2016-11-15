@@ -1,12 +1,12 @@
 {
   "name": "web-sql-batch-helper",
-  "version": "0.1.0-pre8b",
+  "version": "0.2.0-pre01",
   "description": "Web SQL transaction helper if not all SQL is available in the same tick",
-  "main": "dist/index.cjs.js",
+  "main": "dist/index.js",
   "jsnext:main": "dist/index.es6.js",
   "scripts": {
     "build": "npm run distbuild",
-    "distbuild": "rm -rf dist && mkdir dist && coffee -p src/index.coffee > dist/index.es6.js && babel dist/index.es6.js > dist/index.cjs.js",
+    "distbuild": "rm -rf dist && mkdir dist && coffee -p src/index.coffee > dist/index.es6.js && babel dist/index.es6.js > dist/index.js",
     "distclean": "rm -rf dist cordovaTestApp/www/js/index.js cordovaTestApp/platforms cordovaTestApp/plugins webTest/js/index.js test.db node_modules",
     "prepublish": "npm run distbuild",
     "start": "npm run distbuild && rollup webTest/src/index.js -o webTest/js/index.js -f cjs",
@@ -16,6 +16,7 @@
   "keywords": [
     "web",
     "sql",
+    "promise",
     "batch"
   ],
   "author": "Christopher J. Brody",
