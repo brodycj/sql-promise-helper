@@ -1,23 +1,26 @@
 const expect = require('expect.js');
 
 const openDatabase = require('../node_modules/websql/lib/index.js');
-const cordovaTestHelper = require('../test/cordova-test-helper.js');
+const cordovaTestwrapper = require('../test/cordova-test-wrapper.js');
 
 const batchHelper = require('../dist/index.cjs.js').batchHelper;
 
 const implLabels = ['Web SQL API', 'Cordova plugin API'];
 
 describe('Basic', function() {
-  // FUTURE TODO: add test with Cordova plugin API
-  for (var i=0; i<2; ++i) {
-    describe(implLabels[i], function() {
-      it('Batch helper success', function(done) {
-        const mydb = openDatabase('test.db', '1.0', 'Test', 1);
+  const openTestDatabase = openDatabase;
 
-        const db = (i==1) ? cordovaTestHelper(mydb) : mydb;
+  for (var i=0; i<implLabels.length; ++i) {
+    const openDatabase = (i === 0) ? openTestDatabase : (name, ignored1, ignored2, ignored3) => {
+      return cordovaTestwrapper(openTestDatabase(name, '1.0', 'Test', 1));
+    }
+
+    describe(implLabels[i], function() {
+      it('Batch helper success (TBD test timing)', function(done) {
+        const db = openDatabase('test.db', '1.0', 'Test', 1);
 
         const helper = batchHelper(db, onsuccess, function(error) {
-          expect.fail('Unexpected batch failure with error message: ' + error.message);
+          expect().fail('Unexpected batch failure with error message: ' + error.message);
           done();
         });
 
@@ -27,7 +30,7 @@ describe('Basic', function() {
         helper.commit();
 
         function onsuccess() {
-          db.transaction(function(tx) {
+          db.readTransaction(function(tx) {
             tx.executeSql('SELECT * FROM tt', null, function(ignored, rs) {
               expect(rs).to.be.ok();
               expect(rs.rows).to.be.ok();
@@ -40,26 +43,24 @@ describe('Basic', function() {
               done();
             });
           }, function(error) {
-            expect.fail('unexpected error with message: ' + error.message);
+            expect().fail('unexpected error with message: ' + error.message);
           });
         }
       });
 
-      it('Batch helper error', function(done) {
-        const mydb = openDatabase('test.db', '1.0', 'Test', 1);
-
-        const db = (i==1) ? cordovaTestHelper(mydb) : mydb;
+      it('Batch helper error (TBD test timing)', function(done) {
+        const db = openDatabase('test.db', '1.0', 'Test', 1);
 
         // Pre-cleanup in separate transaction:
         db.transaction(function(tx) {
           tx.executeSql('DROP TABLE IF EXISTS tt');
         }, function(error) {
-          expect.fail('Unexpected pre-cleanup error: ' + error.message);
+          expect().fail('Unexpected pre-cleanup error: ' + error.message);
           done();
         });
 
         const helper = batchHelper(db, function() {
-          expect.fail('Unexpected batch success');
+          expect().fail('Unexpected batch success');
           done();
         }, onerror);
 
@@ -73,10 +74,10 @@ describe('Basic', function() {
           expect(error).to.be.ok();
           expect(error.message).to.be.ok();
 
-          db.transaction(function(tx) {
+          db.readTransaction(function(tx) {
             tx.executeSql('SELECT * FROM tt', null, function(ignored, rs) {
               // NOT EXPECTED:
-              expect.fail('Unexpected result: table tt exists');
+              expect().fail('Unexpected result: table tt exists');
               done();
             });
           }, function(error) {
@@ -88,21 +89,19 @@ describe('Basic', function() {
         }
       });
 
-      it('Batch helper abort', function(done) {
-        const mydb = openDatabase('test.db', '1.0', 'Test', 1);
-
-        const db = (i==1) ? cordovaTestHelper(mydb) : mydb;
+      it('Batch helper abort (TBD test timing)', function(done) {
+        const db = openDatabase('test.db', '1.0', 'Test', 1);
 
         // Pre-cleanup in separate transaction:
         db.transaction(function(tx) {
           tx.executeSql('DROP TABLE IF EXISTS tt');
         }, function(error) {
-          expect.fail('Unexpected pre-cleanup error: ' + error.message);
+          expect().fail('Unexpected pre-cleanup error: ' + error.message);
           done();
         });
 
         const helper = batchHelper(db, function() {
-          expect.fail('Unexpected batch success');
+          expect().fail('Unexpected batch success');
           done();
         }, onerror);
 
@@ -115,10 +114,10 @@ describe('Basic', function() {
           expect(error).to.be.ok();
           expect(error.message).to.be('Aborted');
 
-          db.transaction(function(tx) {
+          db.readTransaction(function(tx) {
             tx.executeSql('SELECT * FROM tt', null, function(ignored, rs) {
               // NOT EXPECTED:
-              expect.fail('Unexpected result: table tt exists');
+              expect().fail('Unexpected result: table tt exists');
               done();
             });
           }, function(error) {

@@ -1,5 +1,11 @@
 module.exports = function(db) {
   return {
+    transaction: function(f, ok, error) {
+      db.transaction(f, ok, error);
+    },
+    readTransaction: function(f, ok, error) {
+      db.readTransaction(f, ok, error);
+    },
     sqlBatch: function(batch, ok, error) {
       db.transaction(function(tx) {
         for (var i=0; i<batch.length; ++i) {

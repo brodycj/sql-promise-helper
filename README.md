@@ -86,3 +86,8 @@ Then assemble the bundle using a tool such as RollupJS or JSPM.
 **GENERAL NOTE:** Use of `const` and `let` may not work with some older browsers and devices. Possible solutions include:
 - Just use `var` instead.
 - Use a tool like BabelJS (commonly used with JSPM, RollupJS, WebPack, etc.)
+
+## Test TODOs
+
+- Timing (callbacks should NOT be received in the same tick in case of abort or commit)
+- attempt to call executeStatement/abort/commit after abort or commit (should throw)
