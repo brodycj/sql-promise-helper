@@ -1,6 +1,6 @@
 {
   "name": "sql-promise-helper",
-  "version": "0.0.1-pre01",
+  "version": "0.0.1-pre02",
   "description": "Web SQL promise helper",
   "main": "dist/index.js",
   "jsnext:main": "dist/index.es6.js",
@@ -22,14 +22,14 @@
   "author": "Christopher J. Brody",
   "license": "ISC OR MIT OR Apache-2.0",
   "devDependencies": {
-    "babel-cli": "^6.18.0",
-    "babel-core": "^6.18.2",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.18.0",
-    "babel-preset-es2015": "^6.18.0",
-    "coffee-script": "^1.11.1",
+    "babel-cli": "^6.23.0",
+    "babel-core": "^6.23.1",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.23.0",
+    "babel-preset-es2015": "^6.22.0",
+    "coffee-script": "^1.12.4",
     "expect.js": "^0.3.1",
-    "mocha": "^3.1.2",
-    "rollup": "^0.36.3",
+    "mocha": "^3.2.0",
+    "rollup": "^0.36.4",
     "websql": "^0.4.4"
   },
   "repository": {
