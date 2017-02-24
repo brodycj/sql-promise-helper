@@ -23,10 +23,7 @@ function basicAbortTest() {
   tx.executeStatement('DROP TABLE IF EXISTS tt');
   tx.executeStatement('CREATE TABLE tt(a,b)');
 
-  // FUTURE TODO tx.abort should return a promise:
-  tx.abort();
-
-  return Promise.resolve();
+  return tx.abort();
 }
 
 function basicSuccessTest() {

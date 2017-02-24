@@ -118,9 +118,7 @@ describe('Basic', function() {
         const tx = helper.newBatchTransaction();
         tx.executeStatement('CREATE TABLE tt(a,b)');
         tx.executeStatement('INSERT INTO tt VALUES(?,?)', [101, 'Alice']);
-        tx.abort();
-
-        {
+        tx.abort().then(() => {
           db.readTransaction(function(tx) {
             tx.executeSql('SELECT * FROM tt', null, function(ignored, rs) {
               // NOT EXPECTED:
@@ -133,7 +131,11 @@ describe('Basic', function() {
             expect(error.message).to.be.ok();
             done();
           });
-        }
+        }, (error) => {
+          // NOT EXPECTED:
+          expect().fail('Unexpected abort failure');
+          done();
+        });
       });
 
       it('executeStatement/abort/commit after abort should throw', function(done) {

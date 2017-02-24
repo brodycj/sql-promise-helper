@@ -1,6 +1,6 @@
 {
   "name": "sql-promise-helper",
-  "version": "0.0.1-pre02",
+  "version": "0.0.1-pre03",
   "description": "Web SQL promise helper",
   "main": "dist/index.js",
   "jsnext:main": "dist/index.es6.js",

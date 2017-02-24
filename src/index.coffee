@@ -41,8 +41,11 @@ newBatchTransaction = (db) ->
       if !statements
         throw new Error 'Invalid state'
 
+      # cleanup internal state:
       statements = null
-      return
+
+      # return resolved promise:
+      return Promise.resolve()
 
     commit: ->
       if !statements
